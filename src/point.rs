@@ -66,8 +66,6 @@ impl Point {
     /// The Euclidean norm of a point can be found via the formula \sqrt{p\bar{p}},
     /// where \bar{p} denotes the conjugate of p. This formula simplifies to \sqrt{z^2}.
     pub fn norm(&self) -> f32 {
-        // TODO: ideal norm (see formula above, from PGA cheatsheet)
-
         (self.e12 * self.e12).sqrt()
     }
 
@@ -176,7 +174,6 @@ impl Display for Point {
         write!(f, "e12: {}, e20: {}, e01: {}", self.e12, self.e20, self.e01)
     }
 }
-
 
 #[cfg(test)]
 mod tests {
