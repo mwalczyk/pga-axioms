@@ -1,6 +1,6 @@
-use std::ops::{Mul, Add, Sub};
-use std::ops::{BitOr, BitXor, Not};
 use std::fmt::Display;
+use std::ops::{Add, Mul, Sub};
+use std::ops::{BitOr, BitXor, Not};
 
 use crate::point::Point;
 
@@ -13,23 +13,14 @@ pub struct Line {
 }
 
 impl Line {
-
     /// Constructs a new line with the specified components.
     pub fn new(e0: f32, e1: f32, e2: f32) -> Line {
-        Line {
-            e0,
-            e1,
-            e2,
-        }
+        Line { e0, e1, e2 }
     }
 
     /// Returns a new line representing the equation `y = mx + b`.
     pub fn from_slope_intercept(m: f32, b: f32) -> Line {
-        Line::new(
-            -b,
-            -m,
-            1.0
-        )
+        Line::new(-b, -m, 1.0)
     }
 
     /// `c` in the equation for this line: `ax + by + c = 0`.
@@ -90,7 +81,6 @@ impl Line {
         // This is a Euclidean line
         *self * (1.0 / self.norm())
     }
-
 }
 
 /// Add two lines element-wise.
@@ -165,9 +155,9 @@ impl BitXor for Line {
     fn bitxor(self, rhs: Self) -> Self::Output {
         // This is just the grade-2 part of the geometric product `l1 * l2`
         Self::Output {
-           e12: self.e0 * rhs.e1 - self.e1 * rhs.e0,
-           e20: self.e2 * rhs.e0 - self.e0 * rhs.e2,
-           e01: self.e1 * rhs.e2 - self.e2 * rhs.e1
+            e12: self.e0 * rhs.e1 - self.e1 * rhs.e0,
+            e20: self.e2 * rhs.e0 - self.e0 * rhs.e2,
+            e01: self.e1 * rhs.e2 - self.e2 * rhs.e1,
         }
     }
 }

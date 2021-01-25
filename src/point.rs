@@ -1,6 +1,6 @@
+use std::fmt::Display;
 use std::ops::{Add, Div, Mul, Sub};
 use std::ops::{BitAnd, BitOr, BitXor, Not};
-use std::fmt::Display;
 
 use crate::line::Line;
 
@@ -18,14 +18,9 @@ pub struct Point {
 }
 
 impl Point {
-
     /// Constructs a new point with the specified components.
     pub fn new(e12: f32, e20: f32, e01: f32) -> Self {
-        Self {
-            e12,
-            e20,
-            e01,
-        }
+        Self { e12, e20, e01 }
     }
 
     /// Construct a new Euclidean point with homogeneous coordinates `(x, y, 1)`.
@@ -86,8 +81,6 @@ impl Point {
         // This is a Euclidean point
         *self * (1.0 / self.norm())
     }
-
-
 }
 
 /// Add two points element-wise.

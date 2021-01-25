@@ -46,7 +46,7 @@ pub fn project_point_onto_line(p: &Point, l: &Line) -> Point {
     Point::new(
         (l.e1 * l.e1 + l.e2 * l.e2) * p.e12,
         (l.e2 * p.e20 - l.e1 * p.e01) * l.e2 - l.e0 * l.e1 * p.e12,
-        (l.e1 * p.e01 - l.e2 * p.e20) * l.e1 - l.e0 * l.e2 * p.e12
+        (l.e1 * p.e01 - l.e2 * p.e20) * l.e1 - l.e0 * l.e2 * p.e12,
     )
 }
 
@@ -59,7 +59,7 @@ pub fn project_line_onto_point(l: &Line, p: &Point) -> Line {
     Line::new(
         (l.e1 * p.e20 + l.e2 * p.e01) * -p.e12,
         l.e1 * p.e12 * p.e12,
-        l.e2 * p.e12 * p.e12
+        l.e2 * p.e12 * p.e12,
     )
 }
 
@@ -68,6 +68,10 @@ pub fn project_line_onto_point(l: &Line, p: &Point) -> Line {
 /// the product `p * l`.
 pub fn ortho(p: &Point, l: &Line) -> Line {
     *p | *l
+}
+
+pub fn reflect_point_across_line(p: &Point, l: &Line) -> Point {
+    unimplemented!();
 }
 
 #[cfg(test)]

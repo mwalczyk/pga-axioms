@@ -18,7 +18,7 @@ impl Translator {
         // if the point isn't already an ideal point
         Translator {
             d: dist * 0.5,
-            p: Point::ideal(p.e20, p.e01)
+            p: Point::ideal(p.e20, p.e01),
         }
     }
 

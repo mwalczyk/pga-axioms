@@ -1,7 +1,9 @@
+#![feature(const_fn)]
 #![allow(warnings)]
-mod line;
-mod point;
 mod geometry;
+mod line;
+mod multivector;
+mod point;
 mod translator;
 
 fn main() {
