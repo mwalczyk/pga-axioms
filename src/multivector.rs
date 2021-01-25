@@ -96,6 +96,18 @@ impl Multivector {
         }
     }
 
+    /// Constructs a multivector with every coefficient set to 1.
+    pub const fn ones() -> Self {
+        Self {
+            coeff: [1.0; BASIS_COUNT],
+        }
+    }
+
+    /// Equivalent to `Multivector::zero()`.
+    pub const fn new() -> Self {
+        Self::zero()
+    }
+
     /// Constructs a multivector representing a basis element of 2D PGA.
     pub const fn basis(index: usize, coeff: f32) -> Self {
         let mut multivector = Self::zero();
@@ -196,6 +208,24 @@ impl Multivector {
         multivector
     }
 
+    /// Returns a multivector that represents a rotor that performs a rotation by `angle`
+    /// radians about the Euclidean point `<x, y>`.
+    pub fn rotor(angle: f32, x: f32, y: f32) -> Self {
+        let point = Self::point(x, y);
+        let half_angle = angle * 0.5;
+        point * (half_angle).sin() + (half_angle).cos()
+    }
+
+    /// Returns a multivector that represents a translator that performs a translation by
+    /// `<delta_x, delta_y>` units.
+    pub fn translator(delta_x: f32, delta_y: f32) -> Self {
+        // Use the formula: 1 + (d / 2) * P_inf
+        let direction = Self::ideal_point(delta_y, -delta_x);
+        let amount = direction.ideal_norm();
+        println!("Amount: {}", amount);
+        (direction / amount) * (amount / 2.0) + 1.0
+    }
+
     /// Computes the Clifford conjugate of the multivector. This is the superposition
     /// of the grade involution and reversion operations. It is defined as
     /// `(-1)^(k * (k + 1) / 2) * a_k`.
@@ -254,6 +284,9 @@ impl Multivector {
     /// of the duals of the original two multivectors: `!(!A ^ !B)`. The join operation
     /// can be used, for example, to construct the line (grade-1 element) that "joins"
     /// (i.e. passes through) two points (grade-2 elements).
+    ///
+    /// Notationally, we are working in a *dual* projectivized space, so the "wedge"
+    /// operator corresponds to "meet" and the "vee" operator corresponds to "join".
     pub fn join(&self, rhs: &Self) -> Self {
         let a = *self;
         let b = *rhs;
@@ -265,6 +298,27 @@ impl Multivector {
         let a = *self;
         let b = *rhs;
         a ^ b
+    }
+
+    /// Returns the norm of the multivector.
+    pub fn norm(&self) -> f32 {
+        let multivector = (*self) * self.conjugation();
+        multivector.scalar().abs().sqrt()
+    }
+
+    /// Returns the ideal norm of the multivector.
+    pub fn ideal_norm(&self) -> f32 {
+        self.dual().norm()
+    }
+
+    /// Returns a normalized version of the multivector.
+    pub fn normalized(&self) -> Self {
+        (*self) / self.norm()
+    }
+
+    /// Normalizes the multivector (in-place).
+    pub fn normalize(&mut self) {
+        *self /= self.norm();
     }
 }
 
@@ -443,33 +497,33 @@ impl Mul for Multivector {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        let A = self[0];
-        let B = self[1];
-        let C = self[2];
-        let D = self[3];
-        let E = self[6];
-        let F = self[5];
-        let G = self[4];
-        let H = self[7];
+        let a = self[0];
+        let b = self[1];
+        let c = self[2];
+        let d = self[3];
+        let e = self[4];
+        let f = self[5];
+        let g = self[6];
+        let h = self[7];
 
-        let I = rhs[0];
-        let J = rhs[1];
-        let K = rhs[2];
-        let L = rhs[3];
-        let M = rhs[6];
-        let N = rhs[5];
-        let O = rhs[4];
-        let P = rhs[7];
+        let i = rhs[0];
+        let j = rhs[1];
+        let k = rhs[2];
+        let l = rhs[3];
+        let m = rhs[4];
+        let n = rhs[5];
+        let o = rhs[6];
+        let p = rhs[7];
 
         let mut multivector = Self::zero();
-        multivector[0] = A * I + C * K + D * L - E * M;
-        multivector[1] = A * J + B * I - C * O + D * N - E * P - F * L + G * K - H * M;
-        multivector[2] = A * K + C * I - D * M + E * L;
-        multivector[3] = A * L + C * M - E * K + D * I;
-        multivector[6] = A * M + C * L - D * K + E * I;
-        multivector[5] = A * N - B * L + C * P + D * J + E * O + F * I - G * M + H * K;
-        multivector[4] = A * O + B * K - C * J + D * P - E * N + F * M + G * I + H * L;
-        multivector[7] = A * P + B * M + C * N + D * O + E * J + F * K + G * L + H * I;
+        multivector[0] = a * i + c * k + d * l - g * o;
+        multivector[1] = a * j + b * i - c * m + d * n - g * p - f * l + e * k - h * o;
+        multivector[2] = a * k + c * i - d * o + g * l;
+        multivector[3] = a * l + c * o - g * k + d * i;
+        multivector[6] = a * o + c * l - d * k + g * i;
+        multivector[5] = a * n - b * l + c * p + d * j + g * m + f * i - e * o + h * k;
+        multivector[4] = a * m + b * k - c * j + d * p - g * n + f * o + e * i + h * l;
+        multivector[7] = a * p + b * o + c * n + d * m + g * j + f * k + e * l + h * i;
         multivector
     }
 }
@@ -548,13 +602,14 @@ impl Sub<f32> for Multivector {
 /// Credit: Ganja.js codegen engine features this implementation.
 impl Display for Multivector {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let eps = 0.00001;
         let mut n = 0;
         let ret = self
             .coeff
             .iter()
             .enumerate()
             .filter_map(|(i, &coeff)| {
-                if coeff > 0.00001 || coeff < -0.00001 {
+                if coeff > eps || coeff < -eps {
                     n = 1;
                     Some(format!(
                         "{}{}",
@@ -580,7 +635,6 @@ impl Display for Multivector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::panic::resume_unwind;
 
     #[test]
     fn test_constructors() {
@@ -676,6 +730,19 @@ mod tests {
             "p1 & p2 = {} or the line {}x + {}y + {} = 0 that joins p1 and p2",
             result, a, b, c
         );
+    }
+
+    #[test]
+    fn test_rotors_and_translators() {
+        let p = Multivector::point(1.0, 2.0);
+        let T = Multivector::translator(2.0, 2.0);
+        let result = T * p * T.conjugation();
+        println!("T * p * ~T = {}", result);
+
+        let p = Multivector::point(1.0, 2.0);
+        let R = Multivector::rotor(45.0f32.to_radians(), 0.0, 0.0);
+        let result = R * p * R.conjugation();
+        println!("R * p * ~R = {}", result);
     }
 
     #[test]
