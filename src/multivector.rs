@@ -1,35 +1,34 @@
 #![allow(non_upper_case_globals)]
-use crate::multivector::Grade::{Bivector, Scalar, Trivector, Vector};
 use std::fmt::Display;
 use std::ops::{
     Add, BitAnd, BitOr, BitXor, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Not, Sub,
 };
 
 /// A string representation of all of the basis elements of 2D PGA.
-const BASIS_ELEMENTS: &'static [&'static str] =
+pub const BASIS_ELEMENTS: &'static [&'static str] =
     &["1", "e0", "e1", "e2", "e01", "e20", "e12", "e012"];
 
 /// The total number of basis elements in 2D PGA (i.e. the size of the algebra).
-const BASIS_COUNT: usize = BASIS_ELEMENTS.len();
+pub const BASIS_COUNT: usize = BASIS_ELEMENTS.len();
 
 /// Basis elements are available as global constants.
-const e0: Multivector = Multivector::basis(1, 1.0);
-const e1: Multivector = Multivector::basis(2, 1.0);
-const e2: Multivector = Multivector::basis(3, 1.0);
-const e01: Multivector = Multivector::basis(4, 1.0);
-const e20: Multivector = Multivector::basis(5, 1.0);
-const e12: Multivector = Multivector::basis(6, 1.0);
-const e012: Multivector = Multivector::basis(7, 1.0);
+pub const e0: Multivector = Multivector::basis(1, 1.0);
+pub const e1: Multivector = Multivector::basis(2, 1.0);
+pub const e2: Multivector = Multivector::basis(3, 1.0);
+pub const e01: Multivector = Multivector::basis(4, 1.0);
+pub const e20: Multivector = Multivector::basis(5, 1.0);
+pub const e12: Multivector = Multivector::basis(6, 1.0);
+pub const e012: Multivector = Multivector::basis(7, 1.0);
 
 /// We also include the various permutations of the basis elements above as global constants.
-const e10: Multivector = Multivector::basis(4, -1.0);
-const e02: Multivector = Multivector::basis(5, -1.0);
-const e21: Multivector = Multivector::basis(6, -1.0);
-const e021: Multivector = Multivector::basis(7, -1.0);
-const e102: Multivector = Multivector::basis(7, -1.0);
-const e210: Multivector = Multivector::basis(7, -1.0);
-const e120: Multivector = Multivector::basis(7, 1.0);
-const e201: Multivector = Multivector::basis(7, 1.0);
+pub const e10: Multivector = Multivector::basis(4, -1.0);
+pub const e02: Multivector = Multivector::basis(5, -1.0);
+pub const e21: Multivector = Multivector::basis(6, -1.0);
+pub const e021: Multivector = Multivector::basis(7, -1.0);
+pub const e102: Multivector = Multivector::basis(7, -1.0);
+pub const e210: Multivector = Multivector::basis(7, -1.0);
+pub const e120: Multivector = Multivector::basis(7, 1.0);
+pub const e201: Multivector = Multivector::basis(7, 1.0);
 
 /// An enum representing the grade of a part of a multivector in 2D PGA.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -56,16 +55,22 @@ impl Grade {
     /// respectively.
     pub fn from_blade_index(index: usize) -> Result<Self, &'static str> {
         match index {
-            0 => Ok(Scalar),
-            1..=3 => Ok(Vector),
-            4..=6 => Ok(Bivector),
-            7 => Ok(Trivector),
+            0 => Ok(Grade::Scalar),
+            1..=3 => Ok(Grade::Vector),
+            4..=6 => Ok(Grade::Bivector),
+            7 => Ok(Grade::Trivector),
             _ => Err("Invalid index: should be between 0-7 (inclusive)"),
         }
     }
 }
 
-const GRADES: [Grade; 4] = [Scalar, Vector, Bivector, Trivector];
+/// All of the possible grades in 2D PGA.
+const GRADES: [Grade; 4] = [
+    Grade::Scalar,
+    Grade::Vector,
+    Grade::Bivector,
+    Grade::Trivector,
+];
 
 /// A multivector is a general element of the algebra R(2, 0, 1), i.e. 2D projective geometric
 /// algebra (PGA). For all intents and purposes, it can be thought of as an 8-element array of
@@ -90,7 +95,7 @@ impl Multivector {
     }
 
     /// Constructs the zero multivector (i.e. a multivector with all coefficients set to zero).
-    pub const fn zero() -> Self {
+    pub const fn zeros() -> Self {
         Self {
             coeff: [0.0; BASIS_COUNT],
         }
@@ -103,16 +108,76 @@ impl Multivector {
         }
     }
 
-    /// Equivalent to `Multivector::zero()`.
+    /// In PGA, the origin is represented by the e12 bivector.
+    pub const fn origin() -> Self {
+        e12
+    }
+
+    /// Equivalent to `Multivector::zeros()`.
     pub const fn new() -> Self {
-        Self::zero()
+        Self::zeros()
     }
 
     /// Constructs a multivector representing a basis element of 2D PGA.
     pub const fn basis(index: usize, coeff: f32) -> Self {
-        let mut multivector = Self::zero();
+        let mut multivector = Self::zeros();
         multivector.coeff[index] = coeff;
         multivector
+    }
+
+    /// Constructs a multivector that represents a Euclidean point (grade-2 element) with
+    /// coordinates `<x, y>`.
+    pub fn point(x: f32, y: f32) -> Self {
+        let mut multivector = Self::zeros();
+        multivector[4] = y; // e01, which is dual to e2
+        multivector[5] = x; // e20, which is dual to e1
+        multivector[6] = 1.0;
+        multivector
+    }
+
+    /// Constructs a multivector that represents an ideal point (i.e. a point at infinity,
+    /// grade-2 element) with ideal coordinates `<x, y>`. This can (for all intents and purposes)
+    /// be thought of as a 2D "vector" in traditional linear algebra.
+    pub fn ideal_point(x: f32, y: f32) -> Self {
+        let mut multivector = Self::zeros();
+        multivector[4] = y; // e01, which is dual to e2
+        multivector[5] = x; // e20, which is dual to e1
+                            // Technically, this is unnecessary, but we show it for illustration purposes
+        multivector[6] = 0.0;
+        multivector
+    }
+
+    /// Construct a multivector that represents a line (grade-1 element) with the equation:
+    /// `ax + by + c = 0`.
+    pub fn line(a: f32, b: f32, c: f32) -> Self {
+        let mut multivector = Self::zeros();
+        multivector[1] = c; // e0
+        multivector[2] = a; // e1
+        multivector[3] = b; // e2
+        multivector
+    }
+
+    /// Returns a multivector that represents a rotor that performs a rotation by `angle`
+    /// radians about the Euclidean point `<cx, cy>` (`c` for "center" of rotation).
+    pub fn rotor(angle: f32, cx: f32, cy: f32) -> Self {
+        let point = Self::point(cx, cy);
+        let half_angle = angle * 0.5;
+        point * (half_angle).sin() + (half_angle).cos()
+    }
+
+    /// Returns a multivector that represents a translator that performs a translation by
+    /// `<delta_x, delta_y>` units.
+    pub fn translator(delta_x: f32, delta_y: f32) -> Self {
+        // Use the formula: 1 + (d / 2) * P_inf - note, however, that this constructs
+        // a translator that translates objects in a direction orthogonal to P_inf, which
+        // is why we construct T with the negative reciprocal below
+        // TODO: was this Self::ideal_point(delta_y, -delta_x);
+        let direction = Self::ideal_point(delta_x, -delta_y);
+        let _amount = direction.ideal_norm();
+
+        // This simplifies to the final return statement:
+        // (direction / amount) * (amount / 2.0) + 1.0
+        direction * 0.5 + 1.0
     }
 
     /// Returns the scalar part of the multivector.
@@ -176,54 +241,19 @@ impl Multivector {
         multivector
     }
 
-    /// Constructs a multivector that represents a Euclidean point (grade-2 element) with
-    /// coordinates `<x, y>`.
-    pub fn point(x: f32, y: f32) -> Self {
-        let mut multivector = Self::zero();
-        multivector[4] = y; // e01, which is dual to e2
-        multivector[5] = x; // e20, which is dual to e1
-        multivector[6] = 1.0;
-        multivector
+    /// Applies a function to each element of the multivector.
+    pub fn apply(&mut self, f: fn(f32) -> f32) {
+        for element in self.coeff.iter_mut() {
+            *element = f(*element);
+        }
     }
 
-    /// Constructs a multivector that represents an ideal point (i.e. a point at infinity,
-    /// grade-2 element) with ideal coordinates `<x, y>`. This can (for all intents and purposes)
-    /// be thought of as a 2D "vector" in traditional linear algebra.
-    pub fn ideal_point(x: f32, y: f32) -> Self {
-        let mut multivector = Self::zero();
-        multivector[4] = y; // e01, which is dual to e2
-        multivector[5] = x; // e20, which is dual to e1
-                            // Technically, this is unnecessary, but we show it for illustration purposes
-        multivector[6] = 0.0;
-        multivector
-    }
-
-    /// Construct a multivector that represents a line (grade-1 element) with the equation:
-    /// `ax + by + c = 0`.
-    pub fn line(a: f32, b: f32, c: f32) -> Self {
-        let mut multivector = Self::zero();
-        multivector[1] = c; // e0
-        multivector[2] = a; // e1
-        multivector[3] = b; // e2
-        multivector
-    }
-
-    /// Returns a multivector that represents a rotor that performs a rotation by `angle`
-    /// radians about the Euclidean point `<x, y>`.
-    pub fn rotor(angle: f32, x: f32, y: f32) -> Self {
-        let point = Self::point(x, y);
-        let half_angle = angle * 0.5;
-        point * (half_angle).sin() + (half_angle).cos()
-    }
-
-    /// Returns a multivector that represents a translator that performs a translation by
-    /// `<delta_x, delta_y>` units.
-    pub fn translator(delta_x: f32, delta_y: f32) -> Self {
-        // Use the formula: 1 + (d / 2) * P_inf
-        let direction = Self::ideal_point(delta_y, -delta_x);
-        let amount = direction.ideal_norm();
-        println!("Amount: {}", amount);
-        (direction / amount) * (amount / 2.0) + 1.0
+    /// Applies a function to each of the elements that make up the grade-`n` part of the
+    /// multivector.
+    pub fn apply_to_grade(&mut self, grade: Grade, f: fn(f32) -> f32) {
+        for index in grade.relevant_blade_indices() {
+            self[index] = f(self[index]);
+        }
     }
 
     /// Computes the Clifford conjugate of the multivector. This is the superposition
@@ -266,13 +296,31 @@ impl Multivector {
     /// The formula for reversion is `(-1)^(k * (k - 1) / 2) * a_k `.
     pub fn reversion(&self) -> Self {
         // Using the formula above, we see that only the grade-2 and grade-3 parts
-        // of the multivector are affected (which makes sense)
+        // of the multivector are affected (which makes sense - the reverse of a
+        // scalar or vector is just the scalar or vector itself)
         let mut multivector = self.clone();
         multivector[4] = -self[4];
         multivector[5] = -self[5];
         multivector[6] = -self[6];
         multivector[7] = -self[7];
         multivector
+    }
+
+    /// Computes the inverse `A^-1` of this multivector under the geometric product, such
+    /// that `A * A^-1 = 1`. The inverse is calculated by taking repeated involutions
+    /// until the denominator becomes a scalar. This is identical to the process of
+    /// finding the inverse of a complex number but with more steps (i.e. involutions).
+    ///
+    /// Note that `A * A^-1 = A^-1 * A = 1` (i.e. we can multiply by the inverse on either
+    /// the left or the right side - it doesn't matter).
+    ///
+    /// Reference: http://repository.essex.ac.uk/17282/1/TechReport_CES-534.pdf
+    pub fn inverse(&self) -> Self {
+        // Note that in the calculations below, `den` will always be a scalar
+        let num = self.conjugation() * self.grade_involution() * self.reversion();
+        let den = (*self) * num;
+        let inverse = num / den.scalar();
+        inverse
     }
 
     /// An alternative, more verbose way of calculating the dual of this multivector.
@@ -287,13 +335,22 @@ impl Multivector {
     ///
     /// Notationally, we are working in a *dual* projectivized space, so the "wedge"
     /// operator corresponds to "meet" and the "vee" operator corresponds to "join".
+    ///
+    /// Also note that this version of the "join" operator is orientation preserving
+    /// and follows the formulas laid out in Dorst's "PGA4CS" book. In particular,
+    /// the order of the arguments is swapped. In 2D, we don't have to worry about
+    /// any extraneous sign-flips (as mentioned in the book), since the "dual" and
+    /// "undual" operations are the exact same, i.e. `!(!a) = a` for any multivector
+    /// in 2D PGA.
     pub fn join(&self, rhs: &Self) -> Self {
         let a = *self;
         let b = *rhs;
-        !(!a ^ !b)
+        !(!b ^ !a)
     }
 
-    /// Computes the meet of two multivectors.
+    /// Computes the meet of two multivectors. This can be used to compute incidence
+    /// relations. For example, the meet of two lines is their point of intersection
+    /// (which will be an ideal "point at infinity" if the lines are parallel).
     pub fn meet(&self, rhs: &Self) -> Self {
         let a = *self;
         let b = *rhs;
@@ -301,7 +358,20 @@ impl Multivector {
     }
 
     /// Returns the norm of the multivector.
+    ///
+    /// The norm is `|A| = √⟨A * ~A⟩₀`, where `~` is the reversion (or conjugation)
+    /// operator. The reversion operator makes similar elements cancel each other with
+    /// a positive or zero scalar, so the square root always exists. For example, a
+    /// point times itself may, in general, be a negative number. But a point times
+    /// its reversal will always be non-negative scalar.
+    ///
+    /// For a multivector, we compute the square root of the sum of the squares
+    /// of the norm of each component blade. This leads to the formula above.
+    ///
+    /// A k-vector that is normalized will square to +/- 1.
     pub fn norm(&self) -> f32 {
+        // TODO: is the `abs()` necessary here? Maybe it only matters for algebras with
+        //   one or more negative dimensions (like CGA)
         let multivector = (*self) * self.conjugation();
         multivector.scalar().abs().sqrt()
     }
@@ -385,7 +455,7 @@ impl BitOr for Multivector {
         let o = rhs[6];
         let p = rhs[7];
 
-        let mut multivector = Self::zero();
+        let mut multivector = Self::zeros();
         multivector[0] = a * i + c * k + d * l - g * o;
         multivector[1] = b * i + a * j + e * k - f * l + d * n - c * m - h * o - g * p; // e0
         multivector[2] = c * i + a * k + g * l - d * o; // e1
@@ -431,7 +501,7 @@ impl BitXor for Multivector {
         let o = rhs[6];
         let p = rhs[7];
 
-        let mut multivector = Self::zero();
+        let mut multivector = Self::zeros();
         multivector[0] = a * i;
         multivector[1] = b * i + a * j;
         multivector[2] = c * i + a * k;
@@ -449,7 +519,7 @@ impl Add for Multivector {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        let mut multivector = Self::zero();
+        let mut multivector = Self::zeros();
         for i in 0..BASIS_COUNT {
             multivector[i] = self[i] + rhs[i];
         }
@@ -465,6 +535,16 @@ impl Add<f32> for Multivector {
         let mut multivector = self.clone();
         multivector[0] += rhs;
         multivector
+    }
+}
+
+/// Multiplies a multivector by another multivector's inverse under the
+/// geometric product `A * B^-1`.
+impl Div for Multivector {
+    type Output = Self;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        self * rhs.inverse()
     }
 }
 
@@ -515,7 +595,7 @@ impl Mul for Multivector {
         let o = rhs[6];
         let p = rhs[7];
 
-        let mut multivector = Self::zero();
+        let mut multivector = Self::zeros();
         multivector[0] = a * i + c * k + d * l - g * o;
         multivector[1] = a * j + b * i - c * m + d * n - g * p - f * l + e * k - h * o;
         multivector[2] = a * k + c * i - d * o + g * l;
@@ -563,7 +643,7 @@ impl Not for Multivector {
     type Output = Self;
 
     fn not(self) -> Self::Output {
-        let mut multivector = Self::zero();
+        let mut multivector = Self::zeros();
         for i in 0..BASIS_COUNT {
             // Set:
             // Element 0 to element 7
@@ -580,7 +660,7 @@ impl Sub for Multivector {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        let mut multivector = Self::zero();
+        let mut multivector = Self::zeros();
         for i in 0..BASIS_COUNT {
             multivector[i] = self[i] - rhs[i];
         }
@@ -639,14 +719,15 @@ mod tests {
     #[test]
     fn test_constructors() {
         let a = Multivector::with_coefficients(&[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
-        let b = Multivector::zero();
-        let c = e0;
+        let b = Multivector::zeros();
+        let c = Multivector::ones();
+        let d = e0;
     }
 
     #[test]
     fn test_display() {
         let a = Multivector::with_coefficients(&[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
-        let b = Multivector::zero();
+        let b = Multivector::zeros();
         let c = e0;
         println!("{}", a);
         println!("{}", b);
@@ -678,6 +759,21 @@ mod tests {
         // Should be 0
         let result = e01 * e01;
         println!("e01 * e01 = {}", result);
+    }
+
+    #[test]
+    fn test_inverse() {
+        // First, try with a simple point (grade-2 element)
+        let p = Multivector::point(1.0, 2.0);
+        let p_inv = p.inverse();
+        let result = p * p_inv;
+        println!("p * p_inv = {}", result);
+
+        // Then, try with a full multivector
+        let a = Multivector::with_coefficients(&[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]);
+        let a_inv = a.inverse();
+        let result = a * a_inv;
+        println!("a * a_inv = {}", result);
     }
 
     #[test]
@@ -716,13 +812,16 @@ mod tests {
         result /= result.e12();
         let x = result.e20();
         let y = result.e01();
-        println!("l1 ^ l2 = {} or the point <{}, {}> where l1 and l2 meet", result, x, y);
+        println!(
+            "l1 ^ l2 = {} or the point <{}, {}> where l1 and l2 meet",
+            result, x, y
+        );
 
         // Should be the line: x - y + 1 = 0
         let p1 = Multivector::point(1.0, 2.0);
         let p2 = Multivector::point(3.0, 4.0);
         let mut result = p1.join(&p2);
-        result /= result.e0();
+        //result /= result.e0();
         let a = result.e1();
         let b = result.e2();
         let c = result.e0();
@@ -734,15 +833,35 @@ mod tests {
 
     #[test]
     fn test_rotors_and_translators() {
+        // Should be the Euclidean point: <3, 4>
         let p = Multivector::point(1.0, 2.0);
         let T = Multivector::translator(2.0, 2.0);
-        let result = T * p * T.conjugation();
-        println!("T * p * ~T = {}", result);
+        let mut result = T * p * T.conjugation();
+        result /= result.e12();
+        let x = result.e20();
+        let y = result.e01();
+        println!(
+            "T * p * ~T = {} or the translated point <{}, {}>",
+            result, x, y
+        );
 
         let p = Multivector::point(1.0, 2.0);
         let R = Multivector::rotor(45.0f32.to_radians(), 0.0, 0.0);
         let result = R * p * R.conjugation();
         println!("R * p * ~R = {}", result);
+    }
+
+    #[test]
+    fn test_norm() {
+        // Should be ~5 (arbitrary)
+        let a = Multivector::with_coefficients(&[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+        let b = Multivector::with_coefficients(&[-1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0]);
+        println!("Norm of A: {}", a.norm());
+        println!("Norm of B: {}", b.norm());
+
+        // Should always be +/- 1
+        println!("After normalization: {}", a.normalized().norm());
+        println!("After normalization: {}", b.normalized().norm());
     }
 
     #[test]
@@ -756,6 +875,9 @@ mod tests {
         result = result / result.e12();
         let x = result.e20();
         let y = result.e01();
-        println!("l * p * l = {} or the point <{}, {}> reflected across l", result, x, y);
+        println!(
+            "l * p * l = {} or the point <{}, {}> reflected across l",
+            result, x, y
+        );
     }
 }

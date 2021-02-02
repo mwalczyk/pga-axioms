@@ -1,0 +1,17 @@
+{
+  "scripts": {
+    "serve": "webpack-dev-server"
+  },
+  "dependencies": {
+    "@svgdotjs/svg.draggable.js": "^3.0.2",
+    "@svgdotjs/svg.js": "^3.0.16"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.10.4",
+    "@babel/preset-env": "^7.11.0",
+    "babel-loader": "^8.1.0",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.1.10"
+  }
+}
