@@ -53,7 +53,7 @@ care must be taken to handle the case of parallel lines. However, in projective 
 intersect at an ideal point.
 
 #### Products
-*Geometric Product*
+##### Geometric Product
 To compute the geometric product between two multivectors, we simply distribute the geometric product across each of 
 the basis elements and simplify as necessary using the "rules" of our algebra (`e0` squares to 0, etc.). The 
 geometric product is closed in the sense that the geometric product between any two multivectors `A` and `B` will 
@@ -61,7 +61,7 @@ also be an element of 2D PGA. However, in general, the geometric product between
 some mixed-grade object. For example, the geometric product between a point (grade-2) and a line (grade-1) is a 
 multivector with a vector (grade-1) part and a trivector (grade-3) part.
 
-*Inner Product*
+##### Inner Product
 The (symmetric) inner product of a k-vector and an s-vector is the grade-`|k - s|` part of their geometric product 
 (or zero if it does not exist). For example, the inner product between a point (grade-2) and a line (grade-1) is 
 another line (grade-1). There are other types of inner products (the left and right contractions, for example), but 
@@ -72,7 +72,7 @@ between the first multivector's grade-0 part and each grade of the second multiv
 all parts of the first multivector. In the end, we are left which a handful of intermediate products, each of which 
 will be (in general) some sort of multivector. We add these together and simplify to obtain the final inner product.
 
-*Outer Product*
+##### Outer Product
 The outer (wedge, exterior) product of a k-vector and an s-vector is the grade-`|k + s|` part of their geometric 
 product (or zero if it does not exist). For example, the outer product between two lines (grade-1) is a point 
 (grade-2). The outer product between two points (grade-2) is zero (since grade `|2 + 2| = 4` elements do not exist 
