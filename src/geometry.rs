@@ -4,6 +4,8 @@ use crate::multivector::Multivector;
 /// called the "meet" operator, as it (unconditionally) calculates the point where
 /// the two lines meet. Note that this works even if the lines are parallel: the
 /// result will be an ideal point (i.e. a point at infinity).
+///
+/// Functionally speaking, this is equivalent to both `^` and `meet`.
 pub fn intersect_lines(l1: &Multivector, l2: &Multivector) -> Multivector {
     (*l1) ^ (*l2)
 }
@@ -31,8 +33,9 @@ pub fn dist_point_to_line(p: &Multivector, l: &Multivector) -> f32 {
     (p ^ l).e012()
 }
 
-/// Returns the angle between two lines `l1` and `l2`. Algebraically, the cosine of the
-/// angle between the two lines is given by their inner product `l1 | l2`.
+/// Returns the angle (in radians) between two lines `l1` and `l2`. Algebraically,
+/// the cosine of the angle between the two lines is given by their inner product
+/// `l1 | l2`.
 pub fn angle(l1: &Multivector, l2: &Multivector) -> f32 {
     let l1 = l1.normalized();
     let l2 = l2.normalized();
@@ -41,7 +44,9 @@ pub fn angle(l1: &Multivector, l2: &Multivector) -> f32 {
     cos_theta.acos()
 }
 
-/// Returns the angle bisector of two lines `l1` and `l2`.
+/// Returns the angle bisector of two lines `l1` and `l2`. In general, there are
+/// two possible such bisectors. The chosen angle depends on the orientation of the
+/// two lines (the angle-pair that "matches" the orientation of both lines).
 pub fn bisector(l1: &Multivector, l2: &Multivector) -> Multivector {
     let l1 = l1.normalized();
     let l2 = l2.normalized();
@@ -57,8 +62,19 @@ pub fn midpoint(p1: &Multivector, p2: &Multivector) -> Multivector {
     p1 + p2
 }
 
-/// Projects multivector `a` onto multivector `b`. The geometric meaning depends
-/// on the grade and order of the arguments. For example:
+/// Returns the perpendicular bisector between two points `p1` and `p2`.
+pub fn perpendicular_bisector(p1: &Multivector, p2: &Multivector) -> Multivector {
+    let p1 = p1.normalized();
+    let p2 = p2.normalized();
+
+    let midpoint = midpoint(&p1, &p2);
+    let line_between = p1.join(&p2);
+
+    orthogonal(&midpoint, &line_between)
+}
+
+/// Projects multivector `target` onto multivector `onto`. The geometric meaning
+/// depends on the grade and order of the arguments. For example:
 ///
 /// `project(p, l)` with a point `p` and line `l`:
 ///
@@ -71,8 +87,8 @@ pub fn midpoint(p1: &Multivector, p2: &Multivector) -> Multivector {
 /// Computes the product `(l | p) * p`, i.e. the projection of line `l` onto
 /// point `p`. The result is a new line that runs parallel to `l` and passes
 /// through `p`.
-pub fn project(a: &Multivector, b: &Multivector) -> Multivector {
-    ((*a) | (*b)) * (*b)
+pub fn project(target: &Multivector, onto: &Multivector) -> Multivector {
+    ((*target) | (*onto)) * (*onto)
 }
 
 /// Computes the line orthogonal to line `l` that passes through point `p`. Algebraically,
@@ -85,13 +101,13 @@ pub fn orthogonal(p: &Multivector, l: &Multivector) -> Multivector {
     (*p) | (*l)
 }
 
-/// Reflects the multivector `a` across the multivector `b`. For example, if `a` is a point
-/// and `b` is a line, the result will be a new point reflected across the line.
+/// Reflects the multivector `target` across the multivector `across`. For example, if `target`
+/// is a point and `across` is a line, the result will be a new point reflected across the line.
 ///
 /// The reflected multivector will have the same orientation as the original (for example,
 /// if a line is reflected across a point).
-pub fn reflect(a: &Multivector, b: &Multivector) -> Multivector {
-    (*b) * (*a) * (*b)
+pub fn reflect(target: &Multivector, across: &Multivector) -> Multivector {
+    (*across) * (*target) * (*across)
 }
 
 /// Rotates the multivector by `angle` radians about the point `<x, y>`. Algebraically,
@@ -105,8 +121,8 @@ pub fn rotate(m: &Multivector, angle: f32, x: f32, y: f32) -> Multivector {
 /// Translates the multivector by an amount `<x, y>`. Algebraically, this is equivalent to
 /// computing the "sandwich product" `T * m * ~T`.
 #[allow(non_snake_case)]
-pub fn translate(m: &Multivector, x: f32, y: f32) -> Multivector {
-    let T = Multivector::translator(x, y);
+pub fn translate(m: &Multivector, delta_x: f32, delta_y: f32) -> Multivector {
+    let T = Multivector::translator(delta_x, delta_y);
     T * (*m) * T.conjugation()
 }
 

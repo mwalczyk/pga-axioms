@@ -236,3 +236,24 @@ pub fn axiom_5(paper: &Paper, p0: Point, p1: Point, l0_src: Point, l0_dst: Point
 
     JsValue::null()
 }
+
+#[wasm_bindgen]
+pub fn axiom_7(
+    paper: &Paper,
+    p0: Point,
+    l0_src: Point,
+    l0_dst: Point,
+    l1_src: Point,
+    l1_dst: Point,
+) -> JsValue {
+    // Join the two segment endpoints to form the line between them
+    let l0 = Into::<Multivector>::into(l0_src) & Into::<Multivector>::into(l0_dst);
+    let l1 = Into::<Multivector>::into(l1_src) & Into::<Multivector>::into(l1_dst);
+    let maybe_crease = axioms::axiom_7(&p0.into(), &l0, &l1);
+
+    if let Some(crease) = maybe_crease {
+        return bundle_results(paper, &crease);
+    }
+
+    JsValue::null()
+}

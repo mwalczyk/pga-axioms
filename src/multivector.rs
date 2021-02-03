@@ -170,8 +170,7 @@ impl Multivector {
     pub fn translator(delta_x: f32, delta_y: f32) -> Self {
         // Use the formula: 1 + (d / 2) * P_inf - note, however, that this constructs
         // a translator that translates objects in a direction orthogonal to P_inf, which
-        // is why we construct T with the negative reciprocal below
-        // TODO: was this Self::ideal_point(delta_y, -delta_x);
+        // is why we construct T with the negative y-coordinate below
         let direction = Self::ideal_point(delta_x, -delta_y);
         let _amount = direction.ideal_norm();
 

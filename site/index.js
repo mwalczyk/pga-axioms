@@ -14,7 +14,7 @@ function degreesToRadians(degrees) {
     return degrees * (Math.PI / 180.0);
 }
 
-import('../pkg/pga_axioms_wasm.js').then((wasm) => {
+import('../pkg/pga_axioms.js').then((wasm) => {
 
     // Setup the canvas
     const w = 500;
@@ -95,7 +95,7 @@ import('../pkg/pga_axioms_wasm.js').then((wasm) => {
             'function': wasm.axiom_4
         },
         {
-            'description': '',
+            'description': 'Given two points <b>p0</b> and <b>p1</b> and a line <b>l</b>, there is a fold that places <b>p0</b> onto <b>l</b> and passes through <b>p1</b>.',
             'inputs': {
                 'points': [
                     [scx - paperSize * 0.25, scy - paperSize * 0.125],
@@ -108,6 +108,20 @@ import('../pkg/pga_axioms_wasm.js').then((wasm) => {
             },
             'function': wasm.axiom_5
         },
+        {
+            'description': 'Given one point <b>p</b> and two lines <b>l0</b> and <b>l1</b>, there is a fold that places <b>p</b> onto <b>l0</b> and is perpendicular to <b>l1</b>.',
+            'inputs': {
+                'points': [
+                    [scx - paperSize * 0.25, scy - paperSize * 0.125]
+                ],
+                'lines': [
+                    [scx - paperSize * 0.125, scy, scx + paperSize * 0.125, scy],
+                    [scx, scy + paperSize * 0.125, scx, scy - paperSize * 0.125]
+                ]
+           
+            },
+            'function': wasm.axiom_7
+        }
 
     ];
 
@@ -217,7 +231,7 @@ import('../pkg/pga_axioms_wasm.js').then((wasm) => {
             ]);
 
         const coords = pointCoords.concat(segmentEndpointCoords);
-
+        
         // Run current axiom - points then lines (in that order)
         const results = currentAxiom.function(
             paperStruct,
