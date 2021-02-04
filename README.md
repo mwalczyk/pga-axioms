@@ -52,8 +52,7 @@ allows us to say (without any extra conditions) that two lines intersect at a po
 care must be taken to handle the case of parallel lines. However, in projective space, parallel lines actually 
 intersect at an ideal point.
 
-For a more detailed treatment of "points at infinity", see the following [blog post](https://pointatinfinityblog.
-wordpress.com/2016/04/11/points-at-infinity-i-projective-geometry/).
+For a more detailed treatment of "points at infinity", see the following [blog post](https://pointatinfinityblog.wordpress.com/2016/04/11/points-at-infinity-i-projective-geometry/).
 
 #### Multivectors
 The basis elements of 2D PGA are: `1, e0, e1, e2, e01, e20, e12, e012`. The particular choice of basis isn't 
